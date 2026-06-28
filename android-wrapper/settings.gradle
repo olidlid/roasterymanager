@@ -1,0 +1,2 @@
+rootProject.name = "RoasteryManager"
+include ':app'

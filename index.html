@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roastery Manager - Produksi & Inventaris</title>
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Lucide Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.344.0/font/lucide.min.css">
+    <!-- Chart.js CDN for beautiful analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. DATABASE CONFIGURATION OVERLAY (Runs if localStorage is empty) -->
+    <div id="config-overlay" class="overlay hidden">
+        <div class="overlay-card">
+            <div class="overlay-header">
+                <i class="lucide-database" style="font-size: 2.5rem; color: var(--primary);"></i>
+                <h2 class="overlay-title">Koneksi Database Cloud</h2>
+                <p class="overlay-subtitle">Masukkan detail proyek Supabase Anda untuk menghubungkan database cloud.</p>
+            </div>
+            <form id="config-form" onsubmit="event.preventDefault();">
+                <div class="form-group">
+                    <label class="form-label" for="config-url">Supabase Project URL</label>
+                    <input type="url" id="config-url" class="form-control" placeholder="https://xxxxxx.supabase.co" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="config-key">Supabase API Anon Key</label>
+                    <input type="text" id="config-key" class="form-control" placeholder="eyJhbGciOi..." required>
+                </div>
+                <button type="submit" id="btn-save-config" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                    Hubungkan Database
+                </button>
+            </form>
+            <p style="font-size: 0.75rem; text-align: center; color: var(--text-muted);">
+                Kunci ini disimpan aman di browser lokal Anda.
+            </p>
+        </div>
+    </div>
+
+    <!-- 2. LOGIN & AUTHENTICATION OVERLAY -->
+    <div id="auth-overlay" class="overlay hidden">
+        <div class="overlay-card">
+            <div class="overlay-header">
+                <h2 class="overlay-title">Roastery Manager</h2>
+                <p class="overlay-subtitle">Masuk ke akun produksi Anda</p>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="login-form" onsubmit="event.preventDefault();">
+                <div class="form-group">
+                    <label class="form-label" for="login-email">Alamat Email</label>
+                    <input type="email" id="login-email" class="form-control" placeholder="nama@roastery.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="login-password">Password</label>
+                    <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" id="btn-login-submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                    Masuk dengan Email
+                </button>
+            </form>
+
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0;">
+                <hr style="flex-grow: 1; border: 0; border-top: 1px solid var(--border);">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">ATAU</span>
+                <hr style="flex-grow: 1; border: 0; border-top: 1px solid var(--border);">
+            </div>
+
+            <!-- Google OAuth Button -->
+            <button id="btn-google-login" class="btn btn-secondary" style="width: 100%; display: flex; justify-content: center; gap: 10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                </svg>
+                Masuk dengan Google
+            </button>
+
+            <!-- Backdoor Login (Developer bypass) -->
+            <div style="margin-top: 15px; text-align: center;">
+                <a href="#" id="link-dev-login" style="font-size: 0.8rem; color: var(--text-muted); text-decoration: underline;">
+                    Akses Uji Coba Developer (Tanpa Login)
+                </a>
+            </div>
+            
+            <p style="font-size: 0.75rem; text-align: center; color: var(--text-muted); margin-top: 15px;">
+                Belum punya akun? Registrasi otomatis saat pertama kali masuk.
+            </p>
+        </div>
+    </div>
+
+    <!-- 3. ONBOARDING PREFERENCE WIZARD OVERLAY -->
+    <div id="onboarding-overlay" class="overlay hidden">
+        <div class="overlay-card">
+            <div class="overlay-header">
+                <i class="lucide-sliders" style="font-size: 2.5rem; color: var(--primary);"></i>
+                <h2 class="overlay-title" data-i18n="onboard_title">Preferensi Roastery</h2>
+                <p class="overlay-subtitle" data-i18n="onboard_subtitle">Sesuaikan detail awal roastery Anda. Anda bisa melewati bagian ini dan mengaturnya nanti.</p>
+            </div>
+            <form id="onboarding-form" onsubmit="event.preventDefault();">
+                <div class="form-group">
+                    <label class="form-label" for="onboard-name" data-i18n="lbl_company_name">Nama Roastery / Perusahaan</label>
+                    <input type="text" id="onboard-name" class="form-control" placeholder="Contoh: Gayo Roastery Mandiri" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="onboard-weight" data-i18n="lbl_weight_unit">Satuan Berat</label>
+                        <select id="onboard-weight" class="form-control">
+                            <option value="kg" selected>Kilogram (kg)</option>
+                            <option value="lbs">Pound (lbs)</option>
+                            <option value="g">Gram (g)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="onboard-currency" data-i18n="lbl_currency">Mata Uang</label>
+                        <select id="onboard-currency" class="form-control">
+                            <option value="IDR" selected>Rupiah (IDR)</option>
+                            <option value="USD">Dolar (USD)</option>
+                            <option value="SGD">Dolar Singapura (SGD)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="onboard-language">Bahasa Default (Default Language)</label>
+                    <select id="onboard-language" class="form-control">
+                        <option value="en" selected>English</option>
+                        <option value="id">Indonesia</option>
+                        <option value="ar">العربية (Arabic)</option>
+                    </select>
+                </div>
+                
+                <button type="submit" id="btn-save-onboard" class="btn btn-primary" style="width: 100%; margin-top: 10px;" data-i18n="btn_save_onboard">
+                    Simpan & Mulai
+                </button>
+                <button type="button" id="btn-skip-onboard" class="btn btn-secondary" style="width: 100%; margin-top: 6px;" data-i18n="btn_skip_onboard">
+                    Skip / Atur Nanti
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="app-container">
+        
+        <!-- SIDEBAR (DESKTOP NAV) -->
+        <aside id="sidebar">
+            <div class="sidebar-brand">
+                <img id="sidebar-logo-img" class="sidebar-logo" src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=100&auto=format&fit=crop" alt="Logo">
+                <span id="sidebar-company-name" class="sidebar-title">Gudang Kopi</span>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li class="menu-item active" data-target="sec-dashboard">
+                    <i class="lucide-layout-dashboard"></i>
+                    <span data-i18n="nav_dashboard">Dashboard</span>
+                </li>
+                <li class="menu-item" data-target="sec-greenbean">
+                    <i class="lucide-package-open"></i>
+                    <span data-i18n="nav_greenbean">Greenbean</span>
+                </li>
+                <li class="menu-item" data-target="sec-roasting">
+                    <i class="lucide-flame"></i>
+                    <span data-i18n="nav_roasting">Roasting</span>
+                </li>
+                <li class="menu-item" data-target="sec-packing">
+                    <i class="lucide-archive"></i>
+                    <span data-i18n="nav_packing">Packing</span>
+                </li>
+                <li class="menu-item" data-target="sec-handover">
+                    <i class="lucide-truck"></i>
+                    <span data-i18n="nav_handover">Handover</span>
+                </li>
+                <li class="menu-item" data-target="sec-users">
+                    <i class="lucide-users"></i>
+                    <span data-i18n="nav_users">User Management</span>
+                </li>
+                <li class="menu-item" data-target="sec-settings">
+                    <i class="lucide-settings"></i>
+                    <span data-i18n="nav_settings">Pengaturan</span>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-profile-widget">
+                    <div id="user-avatar-lbl" class="user-avatar">D</div>
+                    <div class="user-info">
+                        <span id="user-name-lbl" class="user-name">Developer</span>
+                        <span id="user-role-lbl" class="user-role">Developer</span>
+                    </div>
+                </div>
+                <button id="btn-logout" class="btn btn-secondary btn-sm" style="width: 100%;">
+                    <i class="lucide-log-out"></i> <span data-i18n="btn_logout">Keluar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main id="main-content">
+            
+            <!-- HEADER BAR -->
+            <div class="header-bar">
+                <div class="page-title-section">
+                    <h1 id="active-page-title" class="page-title" data-i18n="header_title_dashboard">Dashboard Produksi</h1>
+                    <span id="active-page-subtitle" class="page-subtitle" data-i18n="header_subtitle_dashboard">Ringkasan inventaris dan grafik yield konsistensi</span>
+                </div>
+                <div class="header-actions">
+                    <!-- Quick Language Switcher -->
+                    <div class="role-switcher-container">
+                        <select id="language-switcher" class="role-switcher-select">
+                            <option value="en">English (EN)</option>
+                            <option value="id">Indonesia (ID)</option>
+                            <option value="ar">العربية (AR)</option>
+                        </select>
+                    </div>
+
+                    <!-- Quick Role Switcher -->
+                    <div class="role-switcher-container">
+                        <select id="role-play-switcher" class="role-switcher-select">
+                            <option value="Developer">Role: Developer</option>
+                            <option value="Leader">Role: Production Leader</option>
+                            <option value="Roaster">Role: Roaster</option>
+                            <option value="Packing">Role: Packing Team</option>
+                            <option value="Sales">Role: Sales Team</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Dark/Light Theme Button -->
+                    <button id="theme-toggle" class="theme-toggle-btn">
+                        <i class="lucide-sun"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- SECTION 1: DASHBOARD -->
+            <!-- ========================================== -->
+            <section id="sec-dashboard" class="page-section">
+                <!-- Metrics Row -->
+                <div class="metrics-grid">
+                    <div class="card metric-card">
+                        <div class="metric-icon-box warning">
+                            <i class="lucide-package-open"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span id="stat-greenbean" class="metric-value">0 kg</span>
+                            <span class="metric-label">Bahan Baku Greenbean</span>
+                        </div>
+                    </div>
+                    <div class="card metric-card">
+                        <div class="metric-icon-box primary">
+                            <i class="lucide-coffee"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span id="stat-bulk" class="metric-value">0 kg</span>
+                            <span class="metric-label">Stok Curah Matang</span>
+                        </div>
+                    </div>
+                    <div class="card metric-card">
+                        <div class="metric-icon-box success">
+                            <i class="lucide-archive"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span id="stat-packed" class="metric-value">0 pack</span>
+                            <span class="metric-label">Stok Kemasan Jadi</span>
+                        </div>
+                    </div>
+                    <div class="card metric-card">
+                        <div class="metric-icon-box danger">
+                            <i class="lucide-shopping-cart"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span id="stat-pending-orders" class="metric-value">0 order</span>
+                            <span class="metric-label">Pending Order Sales</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts & Active Roster Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-top: 24px;">
+                    <!-- Yield Analytics Chart -->
+                    <div class="card">
+                        <h3 class="card-title">Analisis Yield Roasting (%) <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">Tren Konsistensi Kualitas</span></h3>
+                        <div style="position: relative; height: 300px; width: 100%;">
+                            <canvas id="yield-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Roasting Plan Progress Widget -->
+                    <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <h3 class="card-title">Target Roasting Hari Ini</h3>
+                            <div id="dashboard-plans-list" style="display: flex; flex-direction: column; gap: 16px; margin-top: 10px;">
+                                <p style="color: var(--text-muted); text-align: center; padding: 20px;">Tidak ada rencana roasting terjadwal hari ini.</p>
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; text-align: right;">
+                            <button class="btn btn-secondary btn-sm link-nav" data-target="sec-roasting">Kelola Roasting Plan →</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SECTION 2: GREENBEAN & RECIPES -->
+            <!-- ========================================== -->
+            <section id="sec-greenbean" class="page-section hidden">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+                    <!-- Greenbean Stock Management -->
+                    <div class="card" style="flex: 2;">
+                        <h3 class="card-title">Gudang Bahan Baku (Greenbean)</h3>
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+                            <button id="btn-add-greenbean" class="btn btn-primary btn-sm">
+                                <i class="lucide-plus"></i> Tambah Greenbean Baru
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Kode</th>
+                                        <th>Nama Kopi</th>
+                                        <th>Origin</th>
+                                        <th>Proses</th>
+                                        <th>Stok</th>
+                                        <th>Supplier</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="greenbean-table-body">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Blend Recipes -->
+                    <div class="card" style="flex: 1.5;">
+                        <h3 class="card-title">Resep Blend Racikan</h3>
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+                            <button id="btn-add-recipe" class="btn btn-primary btn-sm">
+                                <i class="lucide-plus"></i> Buat Resep Baru
+                            </button>
+                        </div>
+                        <div id="recipes-cards-container" style="display: flex; flex-direction: column; gap: 14px;">
+                            <!-- Dynamic Cards -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SECTION 3: ROASTING & PLANS -->
+            <!-- ========================================== -->
+            <section id="sec-roasting" class="page-section hidden">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+                    <!-- Roasting Plan Schedule -->
+                    <div class="card" style="flex: 1.2;">
+                        <h3 class="card-title">Perencanaan Roasting (Roasting Plan)</h3>
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+                            <button id="btn-add-plan" class="btn btn-primary btn-sm">
+                                <i class="lucide-calendar-plus"></i> Buat Plan Baru
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>Kopi</th>
+                                        <th>Target</th>
+                                        <th>Progres</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="plan-table-body">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Roasting Batch Logging -->
+                    <div class="card" style="flex: 1.5;">
+                        <h3 class="card-title">Riwayat & Batch Sangrai (Roasting Batches)</h3>
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+                            <button id="btn-add-batch" class="btn btn-primary btn-sm">
+                                <i class="lucide-flame"></i> Log Hasil Roasting
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Kode Batch</th>
+                                        <th>Kopi</th>
+                                        <th>Mesin</th>
+                                        <th>Input/Output</th>
+                                        <th>Yield (%)</th>
+                                        <th>Tipe</th>
+                                        <th>Sticker</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="batch-table-body">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SECTION 4: PACKING -->
+            <!-- ========================================== -->
+            <section id="sec-packing" class="page-section hidden">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
+                    <!-- Bulk Roasted Beans Stock -->
+                    <div class="card">
+                        <h3 class="card-title">Antrean Kopi Curah untuk Dikemas</h3>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Batch</th>
+                                        <th>Kopi</th>
+                                        <th>Tanggal Roasting</th>
+                                        <th>Stok Curah</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="packing-queue-table-body">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Packed Goods Inventory -->
+                    <div class="card">
+                        <h3 class="card-title">Stok Barang Jadi (Packed Goods)</h3>
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+                            <button id="btn-custom-pack" class="btn btn-secondary btn-sm">
+                                <i class="lucide-plus"></i> Kemas Kopi Kustom (Luar)
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Kode Batch</th>
+                                        <th>Nama Kopi</th>
+                                        <th>Ukuran Kemasan</th>
+                                        <th>Stok (Bungkus)</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="packed-inventory-table-body">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SECTION 5: HANDOVER (SERAH TERIMA SALES) -->
+            <!-- ========================================== -->
+            <section id="sec-handover" class="page-section hidden">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
+                    <!-- Sales Request Orders -->
+                    <div class="card">
+                        <h3 class="card-title">Permintaan Order Sales (Request Orders)</h3>
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+                            <button id="btn-create-request" class="btn btn-primary btn-sm">
+                                <i class="lucide-shopping-cart"></i> Buat Request Order Baru
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID Order</th>
+                                        <th>Sales</th>
+                                        <th>Tanggal</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="request-orders-table-body">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Handover Slip Printable Preview Section -->
+                    <div class="card">
+                        <h3 class="card-title">Pratinjau Lembar Serah Terima (Handover Slip)</h3>
+                        <div id="print-actions-bar" class="hidden" style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 16px;">
+                            <button id="btn-print-handover" class="btn btn-primary btn-sm">
+                                <i class="lucide-printer"></i> Cetak Dokumen
+                            </button>
+                        </div>
+                        <div id="handover-slip-preview" class="print-preview-container">
+                            <p style="color: var(--text-muted); text-align: center; padding: 40px;">Pilih atau buat order yang disetujui untuk melihat pratinjau surat jalan di sini.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SECTION 6: SETTINGS -->
+            <!-- ========================================== -->
+            <section id="sec-settings" class="page-section hidden">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 24px;">
+                    <!-- Profile & Company Settings Form -->
+                    <div class="card">
+                        <h3 class="card-title" data-i18n="settings_profile_title">Profil Perusahaan & Lokalisasi</h3>
+                        <form id="settings-company-form" onsubmit="event.preventDefault();">
+                            <div class="form-group">
+                                <label class="form-label" for="sett-company-name" data-i18n="lbl_company_name">Nama Perusahaan / Roastery</label>
+                                <input type="text" id="sett-company-name" class="form-control" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="sett-phone" data-i18n="lbl_phone">No Telepon</label>
+                                    <input type="text" id="sett-phone" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="sett-email" data-i18n="lbl_email">Email Kontak</label>
+                                    <input type="email" id="sett-email" class="form-control">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="sett-address" data-i18n="lbl_address">Alamat Kantor/Pabrik</label>
+                                <textarea id="sett-address" class="form-control" rows="2"></textarea>
+                            </div>
+                             <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="sett-weight" data-i18n="lbl_weight_unit">Satuan Berat Default</label>
+                                    <select id="sett-weight" class="form-control">
+                                        <option value="kg">Kilogram (kg)</option>
+                                        <option value="lbs">Pound (lbs)</option>
+                                        <option value="g">Gram (g)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="sett-currency" data-i18n="lbl_currency">Simbol Mata Uang</label>
+                                    <select id="sett-currency" class="form-control">
+                                        <option value="IDR">Rupiah (IDR)</option>
+                                        <option value="USD">Dolar (USD)</option>
+                                        <option value="SGD">Dolar Singapura (SGD)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="sett-language">Bahasa Default Sistem (Default System Language)</label>
+                                <select id="sett-language" class="form-control">
+                                    <option value="en">English</option>
+                                    <option value="id">Indonesia</option>
+                                    <option value="ar">العربية (Arabic)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="sett-logo-upload">Logo Perusahaan</label>
+                                <input type="file" id="sett-logo-upload" class="form-control" accept="image/*">
+                                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Pilih berkas gambar logo untuk dipajang di dashboard.</p>
+                            </div>
+
+                            <button type="submit" id="btn-save-settings" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                                Simpan Profil Perusahaan
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Handover Print Customizer -->
+                    <div class="card">
+                        <h3 class="card-title">Kustomisasi Dokumen Serah Terima (Print Customizer)</h3>
+                        <form id="settings-print-form" onsubmit="event.preventDefault();">
+                            <div class="form-group">
+                                <label class="form-label" for="sett-print-title">Judul Dokumen Cetakan</label>
+                                <input type="text" id="sett-print-title" class="form-control" required>
+                            </div>
+                            
+                            <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; padding: 6px 0;">
+                                <label class="form-label" for="sett-print-logo">Tampilkan Logo Perusahaan</label>
+                                <input type="checkbox" id="sett-print-logo" style="width: 18px; height: 18px; cursor: pointer;">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="sett-print-footer">Teks Catatan Kaki (Footer Notes)</label>
+                                <textarea id="sett-print-footer" class="form-control" rows="3"></textarea>
+                            </div>
+
+                            <button type="submit" id="btn-save-print-settings" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                                Simpan Kustomisasi Cetak
+                            </button>
+                        </form>
+
+                        <div style="margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px;">
+                            <h4 style="font-size: 0.95rem; margin-bottom: 8px;">Koneksi Database</h4>
+                            <button id="btn-reset-connection" class="btn btn-danger btn-sm" style="width: 100%;">
+                                Putuskan Hubungan Database (Reset)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SECTION 7: USER MANAGEMENT -->
+            <!-- ========================================== -->
+            <section id="sec-users" class="page-section hidden">
+                <div class="card">
+                    <h3 class="card-title">Manajemen Akun User & Peran</h3>
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+                        <button id="btn-invite-user" class="btn btn-primary btn-sm">
+                            <i class="lucide-user-plus"></i> Undang User Baru
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nama Lengkap</th>
+                                    <th>Username / Email</th>
+                                    <th>Peran (Role)</th>
+                                    <th>Tanggal Bergabung</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- DYNAMIC ACTION MODALS (SHARED POP-UPS) -->
+    <!-- ========================================== -->
+    <div id="modal-container" class="overlay hidden">
+        <div class="overlay-card" style="max-width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 id="modal-title" style="font-size: 1.15rem; font-weight: 600;">Modal Title</h3>
+                <button id="btn-close-modal" style="background: transparent; border: 0; cursor: pointer; color: var(--text-muted); font-size: 1.3rem;">×</button>
+            </div>
+            <div id="modal-body-content">
+                <!-- Modal Forms go here dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Embedded ES Modules JavaScript -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
