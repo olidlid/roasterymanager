@@ -139,7 +139,13 @@ export const translations = {
         // Validation/Warnings
         warn_overpack: "Warning: Total weight exceeds bulk stock (Over-packing).",
         lbl_yield_calc: "Real-time Yield Calculation",
-        lbl_code_preview: "Auto-generated Batch Code Preview"
+        lbl_code_preview: "Auto-generated Batch Code Preview",
+        lbl_critical: "Critical",
+        lbl_custom_external: "Custom / External",
+        lbl_custom_coffee: "Custom Coffee",
+        no_bulk_queue: "No bulk coffee in queue.",
+        col_status_completed: "Completed",
+        msg_settings_saved: "Roastery profile saved successfully!"
     },
     id: {
         // Navigation & Sidebar
@@ -280,7 +286,13 @@ export const translations = {
         // Validation/Warnings
         warn_overpack: "Warning: Total berat melebihi stok curah (Over-packing).",
         lbl_yield_calc: "Kalkulasi Yield",
-        lbl_code_preview: "Pratinjau Kode Batch Otomatis"
+        lbl_code_preview: "Pratinjau Kode Batch Otomatis",
+        lbl_critical: "Kritis",
+        lbl_custom_external: "Kustom / Luar",
+        lbl_custom_coffee: "Kopi Kustom",
+        no_bulk_queue: "Tidak ada kopi matang curah dalam antrean kemas.",
+        col_status_completed: "Selesai",
+        msg_settings_saved: "Profil roastery berhasil disimpan!"
     },
     ar: {
         // Navigation & Sidebar
@@ -421,6 +433,12 @@ export const translations = {
         // Validation/Warnings
         warn_overpack: "تحذير: الوزن الإجمالي يتجاوز المخزون السائب (تعبئة زائدة).",
         lbl_yield_calc: "حساب المحصول في الوقت الفعلي",
-        lbl_code_preview: "معاينة رمز الدفعة التلقائي"
+        lbl_code_preview: "معاينة رمز الدفعة التلقائي",
+        lbl_critical: "حرجة",
+        lbl_custom_external: "مخصص / خارجي",
+        lbl_custom_coffee: "قهوة مخصصة",
+        no_bulk_queue: "لا توجد قهوة محمصة سائبة في الطابور.",
+        col_status_completed: "اكتمل",
+        msg_settings_saved: "تم حفظ ملف تعريف المحمص بنجاح!"
     }
 };

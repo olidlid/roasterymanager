@@ -446,7 +446,7 @@ async function initAppDashboard() {
             `;
         }
     } else {
-        dashboardPlansList.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 20px;">Tidak ada rencana roasting terjadwal hari ini.</p>`;
+        dashboardPlansList.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 20px;">${t('no_plans_today')}</p>`;
     }
 }
 
@@ -480,7 +480,7 @@ async function renderGreenbeanSection() {
     tableBody.innerHTML = '';
     greenbeans.forEach(gb => {
         const isLow = parseFloat(gb.stock_kg) < 15;
-        const stockBadge = isLow ? `<span class="badge badge-danger">${gb.stock_kg} ${unit} (Kritis)</span>` : `<span class="badge badge-success">${gb.stock_kg} ${unit}</span>`;
+        const stockBadge = isLow ? `<span class="badge badge-danger">${gb.stock_kg} ${unit} (${t('lbl_critical')})</span>` : `<span class="badge badge-success">${gb.stock_kg} ${unit}</span>`;
         
         tableBody.innerHTML += `
             <tr>
@@ -563,7 +563,7 @@ async function renderRoastingSection() {
                 <td>${parseFloat(plan.fulfilled_roasted_kg)} ${unit}</td>
                 <td><span class="badge ${statusClass}">${plan.status}</span></td>
                 <td>
-                    ${plan.status !== 'Completed' ? `<button class="btn btn-primary btn-sm btn-roast-now" data-id="${plan.id}">Sangrai Sekarang</button>` : 'Selesai'}
+                    ${plan.status !== 'Completed' ? `<button class="btn btn-primary btn-sm btn-roast-now" data-id="${plan.id}">${t('btn_roast_now')}</button>` : t('col_status_completed')}
                 </td>
             </tr>
         `;
@@ -632,13 +632,13 @@ async function renderPackingSection() {
                     <td>${batch.roast_date}</td>
                     <td><span class="badge badge-warning">${batch.remaining_bulk_kg} ${unit}</span></td>
                     <td>
-                        <button class="btn btn-primary btn-sm btn-pack-bulk" data-id="${batch.id}">Kemas</button>
+                        <button class="btn btn-primary btn-sm btn-pack-bulk" data-id="${batch.id}">${t('btn_pack')}</button>
                     </td>
                 </tr>
             `;
         });
     } else {
-        queueTable.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Tidak ada kopi matang curah dalam antrean kemas.</td></tr>`;
+        queueTable.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">${t('no_bulk_queue')}</td></tr>`;
     }
 
     const packedInventoryTable = document.getElementById('packed-inventory-table-body');
@@ -660,7 +660,7 @@ async function renderPackingSection() {
                 }
             }
         } else {
-            coffeeName = p.custom_coffee_name || 'Kopi Kustom';
+            coffeeName = p.custom_coffee_name || t('lbl_custom_coffee');
         }
 
         packedInventoryTable.innerHTML += `
@@ -670,7 +670,7 @@ async function renderPackingSection() {
                 <td>${p.bag_size_g} g</td>
                 <td><span class="badge badge-success">${p.quantity} pack</span></td>
                 <td>
-                    <button class="btn btn-secondary btn-sm btn-print-bag-sticker" data-id="${p.id}">Stiker Struk</button>
+                    <button class="btn btn-secondary btn-sm btn-print-bag-sticker" data-id="${p.id}">${t('btn_sticker_slip')}</button>
                 </td>
             </tr>
         `;
@@ -696,7 +696,7 @@ async function renderHandoverSection() {
                 <td>${ord.order_date}</td>
                 <td><span class="badge ${statusClass}">${ord.status}</span></td>
                 <td>
-                    <button class="btn btn-secondary btn-sm btn-view-order" data-id="${ord.id}">Detail</button>
+                    <button class="btn btn-secondary btn-sm btn-view-order" data-id="${ord.id}">${t('col_action_detail')}</button>
                 </td>
             </tr>
         `;
@@ -1881,10 +1881,10 @@ async function saveSettingsRecord(records) {
     const updates = { ...companySettings, ...records };
     const { error } = await updateData('company_settings', 1, updates);
     if (error) {
-        alert('Gagal menyimpan profil: ' + error.message);
+        alert('Failed to save profile: ' + error.message);
     } else {
         companySettings = updates;
-        alert('Profil roastery berhasil disimpan!');
+        alert(t('msg_settings_saved'));
         loadSectionData('sec-settings');
     }
 }
