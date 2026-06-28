@@ -21,8 +21,8 @@
         <div class="overlay-card">
             <div class="overlay-header">
                 <i class="lucide-database" style="font-size: 2.5rem; color: var(--primary);"></i>
-                <h2 class="overlay-title">Koneksi Database Cloud</h2>
-                <p class="overlay-subtitle">Masukkan detail proyek Supabase Anda untuk menghubungkan database cloud.</p>
+                <h2 class="overlay-title" data-i18n="db_overlay_title">Cloud Database Connection</h2>
+                <p class="overlay-subtitle" data-i18n="db_overlay_subtitle">Enter your Supabase project credentials to connect the cloud database.</p>
             </div>
             <form id="config-form" onsubmit="event.preventDefault();">
                 <div class="form-group">
@@ -34,11 +34,11 @@
                     <input type="text" id="config-key" class="form-control" placeholder="eyJhbGciOi..." required>
                 </div>
                 <button type="submit" id="btn-save-config" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
-                    Hubungkan Database
+                    <span data-i18n="btn_connect_db">Connect Database</span>
                 </button>
             </form>
             <p style="font-size: 0.75rem; text-align: center; color: var(--text-muted);">
-                Kunci ini disimpan aman di browser lokal Anda.
+                This key is stored securely in your local browser.
             </p>
         </div>
     </div>
@@ -47,28 +47,28 @@
     <div id="auth-overlay" class="overlay hidden">
         <div class="overlay-card">
             <div class="overlay-header">
-                <h2 class="overlay-title">Roastery Manager</h2>
-                <p class="overlay-subtitle">Masuk ke akun produksi Anda</p>
+                <h2 class="overlay-title" data-i18n="login_title">Roastery Manager</h2>
+                <p class="overlay-subtitle" data-i18n="login_subtitle">Sign in to your production account</p>
             </div>
             
             <!-- Login Form -->
             <form id="login-form" onsubmit="event.preventDefault();">
                 <div class="form-group">
-                    <label class="form-label" for="login-email">Alamat Email</label>
-                    <input type="email" id="login-email" class="form-control" placeholder="nama@roastery.com" required>
+                    <label class="form-label" for="login-email" data-i18n="col_username">Email Address</label>
+                    <input type="email" id="login-email" class="form-control" placeholder="name@roastery.com" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="login-password">Password</label>
+                    <label class="form-label" for="login-password" data-i18n="lbl_password">Password</label>
                     <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
                 </div>
                 <button type="submit" id="btn-login-submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
-                    Masuk dengan Email
+                    <span data-i18n="btn_login_email">Sign In with Email</span>
                 </button>
             </form>
 
             <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0;">
                 <hr style="flex-grow: 1; border: 0; border-top: 1px solid var(--border);">
-                <span style="font-size: 0.75rem; color: var(--text-muted);">ATAU</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="lbl_or">OR</span>
                 <hr style="flex-grow: 1; border: 0; border-top: 1px solid var(--border);">
             </div>
 
@@ -80,18 +80,18 @@
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
                 </svg>
-                Masuk dengan Google
+                <span data-i18n="btn_login_google">Sign In with Google</span>
             </button>
 
             <!-- Backdoor Login (Developer bypass) -->
             <div style="margin-top: 15px; text-align: center;">
-                <a href="#" id="link-dev-login" style="font-size: 0.8rem; color: var(--text-muted); text-decoration: underline;">
-                    Akses Uji Coba Developer (Tanpa Login)
+                <a href="#" id="link-dev-login" style="font-size: 0.8rem; color: var(--text-muted); text-decoration: underline;" data-i18n="link_dev_login">
+                    Developer Sandbox Mode (No Login)
                 </a>
             </div>
             
             <p style="font-size: 0.75rem; text-align: center; color: var(--text-muted); margin-top: 15px;">
-                Belum punya akun? Registrasi otomatis saat pertama kali masuk.
+                New here? Registration is automatic on first login.
             </p>
         </div>
     </div>
@@ -183,7 +183,7 @@
                 </li>
                 <li class="menu-item" data-target="sec-settings">
                     <i class="lucide-settings"></i>
-                    <span data-i18n="nav_settings">Pengaturan</span>
+                    <span data-i18n="nav_settings">Settings</span>
                 </li>
             </ul>
 
